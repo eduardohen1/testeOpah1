@@ -1,5 +1,7 @@
 package br.com.ehsolucoes.testeOpah1.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
@@ -8,36 +10,37 @@ import java.util.List;
 public class Rooms {
     private Integer roomID;
     private String categoryName;
-    private List<Price> price;
+    private Price price;
     public Rooms(){}
 
-    public Rooms(Integer roomID, String categoryName, List<Price> price) {
+    public Rooms(Integer roomID, String categoryName, Price price) {
         this.roomID = roomID;
         this.categoryName = categoryName;
         this.price = price;
     }
 
+    @JsonProperty("roomID")
     public Integer getRoomID() {
         return roomID;
     }
-
+    @JsonProperty("roomID")
     public void setRoomID(Integer roomID) {
         this.roomID = roomID;
     }
-
+    @JsonProperty("categoryName")
     public String getCategoryName() {
         return categoryName;
     }
-
+    @JsonProperty("categoryName")
     public void setCategoryName(String categoryName) {
         this.categoryName = categoryName;
     }
-
-    public List<Price> getPrice() {
+    @JsonProperty("price")
+    public Price getPrice() {
         return price;
     }
-
-    public void setPrice(List<Price> price) {
+    @JsonProperty("price")
+    public void setPrice(Price price) {
         this.price = price;
     }
 }

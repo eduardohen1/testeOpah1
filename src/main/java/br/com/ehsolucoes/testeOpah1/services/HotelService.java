@@ -1,90 +1,69 @@
 package br.com.ehsolucoes.testeOpah1.services;
 
 import br.com.ehsolucoes.testeOpah1.domain.Hotel;
-import org.json.JSONArray;
-import org.omg.PortableInterceptor.Interceptor;
+import com.google.gson.Gson;
 import org.springframework.stereotype.Service;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.lang.reflect.Type;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.io.Reader;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class HotelService {
 
-    public Hotel GetHotelCity(Integer cityCode) throws IOException {
-        Hotel hotel = new Hotel();
-        JSONObject json = readJsonFromUrl("https://cvcbackendhotel.herokuapp.com/hotels/avail/" + cityCode);
-        //fazer o parse
-        return hotel;
-    }
-
-
-    private static String readAll(Reader rd) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        int cp;
-        while ((cp = rd.read()) != -1) {
-            sb.append((char) cp);
-        }
-        return sb.toString();
-    }
-
-    private static JSONObject readJsonFromUrl(String url) throws IOException {
-        InputStream is = new URL(url).openStream();
-        String jsonText = "";
+    public List<Hotel> GetHotelCity(Integer cityCode) {
         try {
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-            jsonText = readAll(rd);
-            jsonText = jsonText.replace("[", "").replace("]", "");
-            JSONObject json = new JSONObject(jsonText);
-            return json;
-        }catch (JSONException ex) {
-            System.out.println("Erro 1: " + jsonText + "\n" + ex.getMessage());
-            return null;
-        }catch (IOException ex){
-            System.out.println("Erro 2: " + jsonText + "\n" + ex.getMessage());
+            Gson gson = new Gson();
+            //montagem da URL de pesquisa
+            String url = "https://cvcbackendhotel.herokuapp.com/hotels/avail/" + cityCode.toString();
+            //rotina para ler o json do host e devolve-lo em string para parse
+            String jSon = readUrl(url);
+            //Rotina de parse do json recuperado e abastecido list de objeto para trabalho
+            List<Hotel> hotels = Arrays.asList(gson.fromJson(jSon, (Type) Hotel[].class));
+            return hotels;
+        }catch (Exception ex){
+            System.out.println("Erro em GetHotelCity em [HotelService]: " + ex.getMessage());
             return  null;
-        } finally {
-            is.close();
+        }
+    }
+
+    /**
+     * Rotina para leitura de url com result de Json
+     * @param urlString url para leitura
+     * @return retorna json capturado
+     * @throws Exception
+     */
+    private static String readUrl(String urlString) throws Exception{
+        BufferedReader reader = null;
+        try{
+            URL url = new URL(urlString);
+            reader = new BufferedReader(new InputStreamReader(url.openStream()));
+            StringBuffer buffer = new StringBuffer();
+            int read;
+            char[] chars = new char[1024];
+            while((read = reader.read(chars)) != -1)
+                buffer.append(chars,0,read);
+            return  buffer.toString();
+        }finally {
+            if(reader != null)
+                reader.close();
         }
     }
 
     public String retornaTesteHotel(Integer cityCode) throws IOException {
         try {
             String url = "https://cvcbackendhotel.herokuapp.com/hotels/avail/" + cityCode.toString();
-            InputStream is = new URL(url).openStream();
+            String jSon = readUrl(url);
+            Gson gson = new Gson();
 
-            JSONObject json = readJsonFromUrl(url);
-            String txtRooms = "";
+            List<Hotel> hotels = Arrays.asList(gson.fromJson(jSon, (Type) Hotel[].class));
 
-            String id = (String) json.get("id");
-            String name = (String) json.get("name");
-            String cityCode2 = (String) json.get("cityCode");
-            String cityName = (String) json.get("cityName");
+            String texte = hotels.get(0).getCityName();
 
-            JSONArray jsonArray = (JSONArray) json.get("rooms");
-            Iterator itens = jsonArray.iterator();
-            Iterator<Map.Entry> quartos = null;
-            while (itens.hasNext()) {
-                quartos = ((Map) itens.next()).entrySet().iterator();
-                while (quartos.hasNext()) {
-                    Map.Entry camp = quartos.next();
-                    if (!camp.getKey().toString().toUpperCase().equals("PRICE")) {
-                        txtRooms += camp.getKey() + ": " + camp.getValue();
-                    } else {
-
-                    }
-                }
-            }
             return "";
         }catch (Exception ex){
             System.out.println("Erro 1: " + ex.getMessage());

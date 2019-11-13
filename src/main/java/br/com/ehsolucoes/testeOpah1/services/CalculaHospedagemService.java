@@ -12,21 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class CalculaHospedagemService {
 
     @Autowired
     private HotelService hotelService;
-
-    private Double totalPriceAdult;
-    private Double totalPriceChild;
-    private Double totalPrice;
-    private CotacaoDTO cotacaoDTO;
-    private RoomsDTO roomsDTO;
-    private PriceDetailsDTO priceDetailsDTO;
-    private Integer qteDias;
 
     /**
      * Rotina para calcular a cotação de hospedagem pela qte de dias e qte de hospedes
@@ -37,53 +31,59 @@ public class CalculaHospedagemService {
      * @param qteChild qte de hóspedes crianças
      * @return retorna objeto CotacaoDTO preenchido para result
      */
-    public CotacaoDTO cotacao(
+    public List<CotacaoDTO> cotacao(
             Integer cityCode,
             Date checkin,
             Date checkout,
             Integer qteAdult,
             Integer qteChild
     ){
-        totalPrice = 0.0;
-        totalPriceAdult = 0.0;
-        totalPriceChild = 0.0;
-        cotacaoDTO = new CotacaoDTO();
-        roomsDTO = new RoomsDTO();
-        priceDetailsDTO = new PriceDetailsDTO();
+        Double totalPrice = 0.0;
+        Double totalPriceAdult = 0.0;
+        Double totalPriceChild = 0.0;
+        Integer id = 0;
+        Integer qteDias = 0;
 
         //rotina de comparação de datas do framework JodaTime
         Days d = Days.daysBetween(new DateTime(checkin), new DateTime(checkout));
         qteDias = d.getDays();
-        /*
-        Hotel hotel  = hotelService.GetHotelCity(cityCode);
-        if (hotel != null) {
-            cotacaoDTO.setId(hotel.getId());
-            cotacaoDTO.setName(hotel.getName());
+        List<CotacaoDTO> cotacaoDTOs = new ArrayList<>();
+        try {
+            List<Hotel> hotels = hotelService.GetHotelCity(cityCode);
+            List<RoomsDTO> roomsDTOs;
+            CotacaoDTO cotacao;
+            RoomsDTO roomsDTO;
+            PriceDetailsDTO priceDetailsDTO;
+            for (Hotel hotel : hotels) {
+                roomsDTOs = new ArrayList<>();
+                cotacao = new CotacaoDTO();
+                cotacao.setId(id);
+                cotacao.setName(hotel.getCityName());
 
-            for(Rooms rooms : hotel.getRooms()){
-                roomsDTO.setRoomsId(rooms.getRoomID());
-                roomsDTO.setCategoryName(rooms.getCategoryName());
-                for(Price price : rooms.getPrice()){
-                    if(price.getType().toUpperCase().equals("ADULT")){
-                        totalPriceAdult = (price.getValue() * qteDias);
-                    }
-                    if(price.getType().toUpperCase().equals("CHILD")){
-                        totalPriceChild = (price.getValue() * qteDias);
-                    }
+                for (Rooms room1 : hotel.getRooms()) {
+                    roomsDTO = new RoomsDTO();
+                    priceDetailsDTO = new PriceDetailsDTO();
+                    roomsDTO.setRoomsId(room1.getRoomID());
+                    roomsDTO.setCategoryName(room1.getCategoryName());
+                    //Cálculo da hospedagem:
+                    totalPriceAdult = room1.getPrice().getAdult() * qteDias * qteAdult;
+                    totalPriceChild = room1.getPrice().getChild() * qteDias * qteChild;
+                    totalPrice = calculaComissao(totalPriceAdult) + calculaComissao(totalPriceChild);
+                    roomsDTO.setTotalPrice(totalPrice);
+                    priceDetailsDTO.setPricePerDayAdult(room1.getPrice().getAdult());
+                    priceDetailsDTO.setPricePerDayChild(room1.getPrice().getChild());
+                    roomsDTO.setPriceDetailDTO(priceDetailsDTO);
+                    roomsDTOs.add(roomsDTO);
                 }
-                if(totalPriceAdult > 0) totalPrice = calculaComissao (totalPriceAdult * qteAdult);
-                if(totalPriceChild > 0) totalPrice = totalPrice + calculaComissao (totalPriceChild * qteChild);
-
-                priceDetailsDTO.setPricePerDayAdult(totalPriceAdult);
-                priceDetailsDTO.setPricePerDayChild(totalPriceChild);
-                roomsDTO.setPriceDetailDTO(priceDetailsDTO);
-                roomsDTO.setTotalPrice(totalPrice);
+                cotacao.setRooms(roomsDTOs);
+                cotacaoDTOs.add(cotacao);
+                id++;
             }
-            cotacaoDTO.setRooms(roomsDTO);
-            return cotacaoDTO;
-        } else return null;
-         */
-        return null;
+            return cotacaoDTOs;
+        }catch (Exception ex){
+            System.out.println("Erro em cotacao em [CalculaHospedagemService]: " + ex.getMessage());
+            return null;
+        }
     }
 
     public String testeBuscaCidade(Integer cityCode) throws IOException {

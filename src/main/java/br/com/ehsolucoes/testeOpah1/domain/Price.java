@@ -1,33 +1,36 @@
 package br.com.ehsolucoes.testeOpah1.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Classe para controle dos tipos de preços dos quartos.
  * [Type] Adulto/Criança
  * [value] Valor de hospedagem
  */
 public class Price {
-    private String type;
-    private Double value;
+    private double adult;
+    private double child;
+
     public Price(){}
 
-    public Price(String type, Double value) {
-        this.type = type;
-        this.value = value;
+    public Price(double adult, double child) {
+        this.adult = adult;
+        this.child = child;
     }
-
-    public String getType() {
-        return type;
+    @JsonProperty("adult")
+    public double getAdult() {
+        return adult;
     }
-
-    public void setType(String type) {
-        this.type = type;
+    @JsonProperty("adult")
+    public void setAdult(double adult) {
+        this.adult = adult;
     }
-
-    public Double getValue() {
-        return value;
+    @JsonProperty("child")
+    public double getChild() {
+        return child;
     }
-
-    public void setValue(Double value) {
-        this.value = value;
+    @JsonProperty("child")
+    public void setChild(double child) {
+        this.child = child;
     }
 }
